@@ -1,0 +1,565 @@
+---
+/**
+ * Intercambio (Secret Santa), Spanish only: each person types their PIN and the page unwraps
+ * who they gift to. The draw itself is made by scripts/secret-santa.mjs (see src/data/secretSanta.ts).
+ */
+import Base from '@/layouts/Base.astro';
+import { secretSantaText as t } from '@/data/secretSanta';
+import draw from '@/data/secretSanta.json';
+
+// The title's first word sits on its own line
+const [firstWord, ...rest] = t.title.split(' ');
+const restOfTitle = rest.join(' ');
+
+// The wish list question, split around the part in pink
+const [questionStart, questionEnd = ''] = t.wishList.question.split(t.wishList.pink);
+
+// Snowflakes with steady but uneven spots, so every build looks the same
+const flakes = Array.from({ length: 36 }, (_, i) => ({
+  x: (i * 37) % 100,
+  size: 4 + ((i * 7) % 6),
+  duration: 9 + ((i * 13) % 9),
+  delay: -((i * 5) % 17),
+  drift: ((i % 5) - 2) * 14,
+}));
+---
+
+<Base title={t.title} lang="es" noindex footer={false}>
+  <section class="santa relative isolate overflow-hidden">
+    <div class="snow" aria-hidden="true">
+      {flakes.map((f) => <span style={`--x:${f.x}%;--size:${f.size}px;--dur:${f.duration}s;--delay:${f.delay}s;--drift:${f.drift}px`} />)}
+    </div>
+
+    <div class="stage container-x flex min-h-dvh flex-col items-center pt-28 pb-10 text-center">
+      <div class="flex w-full flex-1 flex-col items-center justify-center pb-10">
+        <!-- Before: title and the code boxes -->
+        <div data-locked class="flex flex-col items-center">
+          <h1 class="display-lg">{firstWord}<br />{restOfTitle}<span class="glow-dot">.</span></h1>
+        </div>
+
+        <!-- After: who they got -->
+        <div data-result class="flex flex-col items-center" hidden>
+          <p class="display-sm" data-greeting></p>
+          <p class="eyebrow mt-5">{t.youGift}</p>
+          <p class="santa-name display-xl mt-3" data-giftee></p>
+        </div>
+
+        <div class="gift-wrap my-10" data-gift-wrap>
+          <div class="gift-glow" data-glow aria-hidden="true"></div>
+          <div class="gift" data-gift aria-hidden="true">
+            <div class="gift-lid" data-lid><span class="bow"></span></div>
+            <div class="gift-box"></div>
+          </div>
+        </div>
+
+        <div data-locked class="flex w-full flex-col items-center">
+          <p class="lead max-w-sm">{t.intro}</p>
+          <form class="pin mt-6" data-pin-form>
+            <label for="santa-pin" class="sr-only">{t.label}</label>
+            <div class="pin-boxes" aria-hidden="true">
+              {Array.from({ length: draw.digits }, () => <span class="pin-box" />)}
+            </div>
+            <input
+              id="santa-pin"
+              class="pin-input"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              autocomplete="off"
+              maxlength={draw.digits}
+              data-pin
+            />
+          </form>
+          <p class="mt-5 min-h-[1.65em] text-sm text-rose" data-status role="status" aria-live="polite"></p>
+          <noscript><p class="text-sm text-muted">{t.noscript}</p></noscript>
+        </div>
+
+        <div data-result class="flex flex-col items-center gap-6" hidden>
+          <p class="lead">{t.shh} <span aria-hidden="true">🤫</span></p>
+          <button type="button" class="btn btn-ghost" data-hide>{t.hide}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- For everyone, whoever they got; shows up once the present is open -->
+    <div class="container-x pb-6" data-wish hidden>
+      <a href={t.wishList.href} class="tile group !block px-6 py-16 text-left sm:px-12 sm:py-20">
+        <p class="eyebrow flex w-fit">{t.wishList.label}</p>
+        <p class="display-lg mt-6">{questionStart}<span class="text-rose">{t.wishList.pink}</span>{questionEnd}</p>
+        <span class="display-sm mt-6 block transition-colors duration-500 group-hover:text-rose">
+          {t.wishList.link}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </span>
+      </a>
+    </div>
+
+    <!-- The big "Hola …!" that plays first, then shrinks into the greeting -->
+    <p class="hello display-xl" data-hello aria-hidden="true" hidden></p>
+    <canvas class="confetti" data-confetti aria-hidden="true"></canvas>
+  </section>
+</Base>
+
+<style>
+  .santa {
+    background:
+      radial-gradient(60% 45% at 50% 55%, rgb(224 85 138 / 0.12), transparent 70%),
+      var(--color-paper);
+  }
+
+  /* Falling snow, in the site's blush tones */
+  .snow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .snow span {
+    position: absolute;
+    top: -12px;
+    left: var(--x);
+    width: var(--size);
+    height: var(--size);
+    border-radius: 999px;
+    background: rgb(224 85 138 / 0.22);
+    animation: fall var(--dur) linear var(--delay) infinite;
+  }
+  .snow span:nth-child(3n) {
+    background: rgb(255 255 255 / 0.95);
+    box-shadow: 0 0 0 1px rgb(224 85 138 / 0.12);
+  }
+  @keyframes fall {
+    to {
+      transform: translate(var(--drift), 110dvh);
+    }
+  }
+
+  /* The present */
+  .gift-wrap {
+    position: relative;
+    width: 180px;
+    height: 170px;
+  }
+  .gift {
+    position: absolute;
+    inset: 0;
+    animation: bob 3.2s ease-in-out infinite;
+  }
+  .gift-box {
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    width: 156px;
+    height: 112px;
+    border-radius: 6px 6px 14px 14px;
+    background:
+      linear-gradient(90deg, transparent 44%, var(--color-rose-soft) 44% 56%, transparent 56%),
+      radial-gradient(circle, rgb(255 255 255 / 0.18) 3px, transparent 3.5px) 0 0 / 22px 22px,
+      linear-gradient(180deg, var(--color-rose-glow), var(--color-rose));
+    box-shadow: 0 30px 50px -24px rgb(163 47 95 / 0.6);
+  }
+  .gift-lid {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    z-index: 1;
+    width: 180px;
+    height: 36px;
+    border-radius: 10px;
+    background:
+      linear-gradient(90deg, transparent 44%, var(--color-rose-soft) 44% 56%, transparent 56%),
+      var(--color-rose-deep);
+    box-shadow: 0 6px 12px -6px rgb(29 24 32 / 0.35);
+    transform-origin: 20% 100%;
+  }
+  .bow::before,
+  .bow::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    width: 46px;
+    height: 32px;
+    margin-bottom: -6px;
+    border: 9px solid var(--color-rose-soft);
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  }
+  .bow::before {
+    transform: translateX(-100%) rotate(-18deg);
+    transform-origin: right bottom;
+  }
+  .bow::after {
+    transform: rotate(18deg);
+    transform-origin: left bottom;
+  }
+  .gift-glow {
+    position: absolute;
+    left: 50%;
+    top: 60px;
+    width: 240px;
+    height: 240px;
+    translate: -50% -50%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgb(255 214 120 / 0.65), rgb(224 85 138 / 0.2) 45%, transparent 70%);
+    opacity: 0;
+    scale: 0.3;
+    pointer-events: none;
+  }
+  @keyframes bob {
+    50% {
+      transform: translateY(-8px) rotate(-1.5deg);
+    }
+  }
+  /* Wiggles while the code is being checked */
+  .gift-wrap.is-checking .gift {
+    animation: wiggle 0.35s ease-in-out infinite;
+  }
+  @keyframes wiggle {
+    25% {
+      transform: rotate(-4deg);
+    }
+    75% {
+      transform: rotate(4deg);
+    }
+  }
+
+  /* Code boxes: one real input lies invisibly on top of them */
+  .pin {
+    position: relative;
+  }
+  .pin-boxes {
+    display: flex;
+    gap: 0.6rem;
+  }
+  .pin-box {
+    display: grid;
+    place-items: center;
+    width: 3.4rem;
+    height: 4rem;
+    border: 1.5px solid rgb(29 24 32 / 0.15);
+    border-radius: 14px;
+    background: var(--color-card);
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    transition:
+      border-color 0.3s var(--ease-out-expo),
+      box-shadow 0.3s var(--ease-out-expo),
+      transform 0.3s var(--ease-out-expo);
+  }
+  .pin-box.is-filled {
+    transform: translateY(-3px);
+    border-color: var(--color-rose-glow);
+  }
+  .pin-box.is-filled::after {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: var(--color-rose-glow);
+    box-shadow: 0 0 12px rgb(224 85 138 / 0.6);
+  }
+  .pin:focus-within .pin-box.is-current {
+    border-color: var(--color-rose);
+    box-shadow: var(--shadow-glow);
+  }
+  .pin-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    font-size: 16px; /* stops iPhones from zooming in */
+    cursor: pointer;
+  }
+  .pin.is-wrong {
+    animation: shake 0.45s ease-in-out;
+  }
+  @keyframes shake {
+    20%,
+    60% {
+      transform: translateX(-10px);
+    }
+    40%,
+    80% {
+      transform: translateX(10px);
+    }
+  }
+
+  .santa-name {
+    color: var(--color-rose);
+    text-shadow: 0 0 40px rgb(224 85 138 / 0.35);
+  }
+  :global(.santa .word) {
+    display: inline-block;
+    white-space: nowrap;
+  }
+  :global(.santa .char) {
+    display: inline-block;
+  }
+  .hello {
+    position: fixed;
+    inset-inline: 0;
+    z-index: 55;
+    padding-inline: 1rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  /* Once open, the page stops filling the screen so the wish list card peeks in below */
+  .santa.is-open .stage {
+    min-height: auto;
+  }
+
+  .confetti {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .snow span,
+    .gift,
+    .gift-wrap.is-checking .gift,
+    .pin.is-wrong {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import draw from '@/data/secretSanta.json';
+  import { secretSantaText as t } from '@/data/secretSanta';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const form = document.querySelector<HTMLFormElement>('[data-pin-form]')!;
+  const input = document.querySelector<HTMLInputElement>('[data-pin]')!;
+  const boxes = [...document.querySelectorAll<HTMLElement>('.pin-box')];
+  const status = document.querySelector<HTMLElement>('[data-status]')!;
+  const giftWrap = document.querySelector<HTMLElement>('[data-gift-wrap]')!;
+  const lid = document.querySelector<HTMLElement>('[data-lid]')!;
+  const glow = document.querySelector<HTMLElement>('[data-glow]')!;
+  const locked = [...document.querySelectorAll<HTMLElement>('[data-locked]')];
+  const result = [...document.querySelectorAll<HTMLElement>('[data-result]')];
+  const greeting = document.querySelector<HTMLElement>('[data-greeting]')!;
+  const giftee = document.querySelector<HTMLElement>('[data-giftee]')!;
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-confetti]')!;
+  const hello = document.querySelector<HTMLElement>('[data-hello]')!;
+  const eyebrow = result[0].querySelector<HTMLElement>('.eyebrow')!;
+  const wish = document.querySelector<HTMLElement>('[data-wish]')!;
+  const section = document.querySelector<HTMLElement>('.santa')!;
+
+  // --- Unlocking: the PIN is the key to exactly one of the locked results ---
+
+  const bytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+  async function unlock(pin: string): Promise<{ name: string; to: string } | null> {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pin), 'PBKDF2', false, ['deriveKey']);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: bytes(draw.salt), iterations: draw.iterations },
+      base,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt'],
+    );
+    for (const entry of draw.entries) {
+      try {
+        const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes(entry.iv) }, key, bytes(entry.data));
+        return JSON.parse(new TextDecoder().decode(plain));
+      } catch {
+        // not this one
+      }
+    }
+    return null;
+  }
+
+  // --- The code boxes ---
+
+  function paintBoxes() {
+    const n = input.value.length;
+    boxes.forEach((box, i) => {
+      box.classList.toggle('is-filled', i < n);
+      box.classList.toggle('is-current', i === Math.min(n, boxes.length - 1));
+    });
+  }
+
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, draw.digits);
+    status.textContent = '';
+    paintBoxes();
+    if (input.value.length === draw.digits) form.requestSubmit();
+  });
+  input.addEventListener('focus', paintBoxes);
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (input.value.length !== draw.digits || input.disabled) return;
+    input.disabled = true;
+    giftWrap.classList.add('is-checking');
+    status.textContent = t.checking;
+
+    // A short pause so the wiggle reads, even on fast phones
+    const [match] = await Promise.all([unlock(input.value), new Promise((r) => setTimeout(r, 700))]);
+    giftWrap.classList.remove('is-checking');
+    input.disabled = false;
+
+    if (!match) {
+      status.textContent = t.wrong;
+      form.classList.remove('is-wrong');
+      void form.offsetWidth; // restart the shake
+      form.classList.add('is-wrong');
+      input.value = '';
+      paintBoxes();
+      input.focus();
+      return;
+    }
+    status.textContent = '';
+    open(match);
+  });
+
+  // --- Opening the present ---
+
+  /** Puts each letter in its own span so they can pop in one by one (words stay unbroken). */
+  function fillChars(el: HTMLElement, text: string) {
+    el.replaceChildren(
+      ...text.split(' ').flatMap((word, i) => {
+        const w = document.createElement('span');
+        w.className = 'word';
+        w.append(
+          ...[...word].map((ch) => {
+            const c = document.createElement('span');
+            c.className = 'char';
+            c.textContent = ch;
+            return c;
+          }),
+        );
+        return i ? [document.createTextNode(' '), w] : [w];
+      }),
+    );
+  }
+
+  const middleY = (el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    return r.top + r.height / 2;
+  };
+  const fontSize = (el: HTMLElement) => parseFloat(getComputedStyle(el).fontSize);
+
+  let tl: gsap.core.Timeline | null = null;
+
+  function open({ name, to }: { name: string; to: string }) {
+    greeting.textContent = `${t.greeting} ${name}!`;
+    fillChars(hello, greeting.textContent);
+    fillChars(giftee, to);
+    giftee.setAttribute('aria-label', to);
+
+    if (reduceMotion) {
+      locked.forEach((el) => (el.hidden = true));
+      result.forEach((el) => (el.hidden = false));
+      wish.hidden = false;
+      section.classList.add('is-open');
+      gsap.set(lid, { y: 92, x: -75, rotation: -84 });
+      gsap.set(glow, { opacity: 1, scale: 1 });
+      return;
+    }
+
+    const pop = { opacity: 0, y: 50, scale: 0.4, rotation: () => gsap.utils.random(-25, 25) };
+    tl = gsap.timeline();
+    tl.to(locked, { opacity: 0, y: 12, duration: 0.3, ease: 'power2.in' })
+      .add(() => {
+        locked.forEach((el) => (el.hidden = true));
+        result.forEach((el) => (el.hidden = false));
+        gsap.set([greeting, eyebrow, ...giftee.children, result[1]], { opacity: 0 });
+        // The big hello sits in the middle of where the greeting and name will be
+        hello.hidden = false;
+        hello.style.top = `${middleY(result[0]) - hello.offsetHeight / 2}px`;
+      })
+      .to(lid, { keyframes: [{ y: -130, x: -40, rotation: -40, duration: 0.45, ease: 'power2.out' }, { y: 92, x: -75, rotation: -84, duration: 0.6, ease: 'bounce.out' }] })
+      .to(glow, { opacity: 1, scale: 1, duration: 1.2, ease: 'expo.out' }, '<')
+      .add(burst, '<0.05')
+      .from(hello.querySelectorAll('.char'), { ...pop, y: 70, scale: 0.3, duration: 0.9, ease: 'back.out(2)', stagger: 0.05 }, '<0.15')
+      // Holds a moment, then shrinks up into the small greeting
+      .to(hello, { y: () => middleY(greeting) - middleY(hello), scale: () => fontSize(greeting) / fontSize(hello), duration: 0.8, ease: 'expo.inOut' }, '+=1.2')
+      .to(hello, { opacity: 0, duration: 0.25 }, '>-0.25')
+      .to(greeting, { opacity: 1, duration: 0.25 }, '<')
+      .set(hello, { display: 'none' })
+      .fromTo(eyebrow, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' })
+      .fromTo(giftee.children, pop, { opacity: 1, y: 0, scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(2.2)', stagger: 0.06 }, '<0.3')
+      .fromTo(result[1], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' }, '>-0.2')
+      .add(() => {
+        wish.hidden = false;
+        section.classList.add('is-open');
+      })
+      .fromTo(wish, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' });
+  }
+
+  document.querySelector('[data-hide]')!.addEventListener('click', () => {
+    tl?.kill();
+    gsap.killTweensOf(glow);
+    hello.hidden = true;
+    wish.hidden = true;
+    section.classList.remove('is-open');
+    result.forEach((el) => (el.hidden = true));
+    locked.forEach((el) => (el.hidden = false));
+    gsap.set([lid, glow, hello, greeting, eyebrow, wish, ...locked, ...result], { clearProps: 'all' });
+    greeting.textContent = '';
+    hello.replaceChildren();
+    giftee.replaceChildren();
+    input.value = '';
+    paintBoxes();
+    input.focus();
+  });
+
+  // --- Confetti from the present ---
+
+  function burst() {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    ctx.scale(dpr, dpr);
+
+    const from = giftWrap.getBoundingClientRect();
+    const colors = ['#e0558a', '#c23d72', '#fbe2eb', '#f2c14e', '#3f8f6b', '#ffffff'];
+    const bits = Array.from({ length: 170 }, () => {
+      const angle = gsap.utils.random(-Math.PI * 0.92, -Math.PI * 0.08);
+      const speed = gsap.utils.random(7, 17);
+      return {
+        x: from.left + from.width / 2,
+        y: from.top + from.height * 0.35,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        w: gsap.utils.random(6, 11),
+        h: gsap.utils.random(8, 16),
+        r: gsap.utils.random(0, Math.PI * 2),
+        vr: gsap.utils.random(-0.3, 0.3),
+        color: colors[Math.floor(Math.random() * colors.length)],
+      };
+    });
+
+    const step = () => {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      let alive = false;
+      for (const b of bits) {
+        b.vx *= 0.985;
+        b.vy = b.vy * 0.985 + 0.32;
+        b.x += b.vx;
+        b.y += b.vy;
+        b.r += b.vr;
+        if (b.y > innerHeight + 20) continue;
+        alive = true;
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.r);
+        ctx.scale(1, Math.cos(b.r * 2)); // flutter
+        ctx.fillStyle = b.color;
+        ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+        ctx.restore();
+      }
+      if (alive) requestAnimationFrame(step);
+      else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    };
+    requestAnimationFrame(step);
+  }
+</script>

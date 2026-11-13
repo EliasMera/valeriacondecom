@@ -20,7 +20,7 @@ export const showPresentsOnHomepage = true;
 
 /** The three presents shown on the homepage card, left to right. Use each one's exact `title` from the list below. */
 export const homepagePresents = [
-  'What Am I, A Deer? by Polly Barton',
+  'iPad',
   'Tecnifibre TFight 300S racquet',
   'Songmont Medium Song Bag in Lucky Red',
 ];
@@ -34,10 +34,6 @@ export const presentsHome = {
   },
   button: { en: 'Get ideas', es: 'Aquí hay ideas' },
 };
-
-/** The line at the top of the /presents page */
-export const presentsIntro =
-  "Christmas and my birthday are coming up. If you'd like to get me something, here are a few things I'd love.";
 
 export const presents: Present[] = [
   {
@@ -70,6 +66,18 @@ export const presents: Present[] = [
     price: '$190',
   },
   {
+    title: 'iPad',
+    url: 'https://www.apple.com/shop/buy-ipad/ipad',
+    image: 'ipad.jpg',
+    price: 'from $449',
+  },
+  {
+    title: 'Apple Pencil Pro',
+    url: 'https://www.apple.com/shop/product/mx2d3am/a/apple-pencil-pro',
+    image: 'apple-pencil-pro.jpg',
+    price: '$129',
+  },
+  {
     title: 'ChiaoGoo Twist Shorties needle set, blue (2 & 3 inch)',
     url: 'https://www.amazon.com/dp/B085RCRBX2',
     image: 'chiaogoo-twist-shorties.webp',
@@ -92,12 +100,6 @@ export const presents: Present[] = [
     url: 'https://au.wilson.com/pages/the-marta-dress',
     image: 'wilson-marta-dress.avif',
     price: '$160',
-  },
-  {
-    title: "Oasis (What's the Story) Morning Glory? vinyl",
-    url: 'https://www.target.com/p/oasis-whats-the-story-morning-glory-vinyl/-/A-1004107038',
-    image: 'oasis-morning-glory-vinyl.jpg',
-    price: '$37.04',
   },
   {
     title: 'DOYO wireless guitar controllers for Clone Hero, black & white pair',
@@ -136,6 +138,18 @@ export const presents: Present[] = [
     price: '$148',
   },
   {
+    title: 'Reservoir cell banking, a time capsule for your cells',
+    url: 'https://withreservoir.com',
+    image: 'reservoir.jpg',
+    price: '$4,995',
+  },
+  {
+    title: 'BAGGU Everyday Cloud Bag in Cherry',
+    url: 'https://baggu.com/products/everyday-cloud-bag-cherry',
+    image: 'baggu-everyday-cloud-bag-cherry.jpg',
+    price: '$68',
+  },
+  {
     title: 'MAM Originals Atlantis gold liquid earrings that hook around the ears',
     url: 'https://mamoriginals.com/products/gold-liquid-earrings-that-hook-around-the-ears-atlantis-784',
     image: 'mam-atlantis-earrings-worn.jpg',
@@ -160,52 +174,16 @@ export const presents: Present[] = [
     price: '$295',
   },
   {
-    title: "Taylor Swift, Red (Taylor's Version) on vinyl",
-    url: 'https://www.amazon.com/dp/B09J99PKDF',
-    image: 'red-taylors-version-vinyl.jpg',
-    price: '$46.99',
-  },
-  {
-    title: 'Aritzia Confession satin dress',
-    url: 'https://www.aritzia.com/us/en/product/confession-satin-dress/132078.html?color=1274',
-    image: 'aritzia-confession-satin-dress.avif',
-    price: '$128',
-  },
-  {
-    title: 'SMISKI Hippers blind box figure',
-    url: 'https://smiski.com/e/products/hippers-series/',
-    image: 'smiski-hippers.png',
-    price: '$14',
-  },
-  {
-    title: 'Casio Baby-G BG-169CM-4 watch',
-    url: 'https://www.casio.com/us/watches/babyg/product.BG-169CM-4/',
-    image: 'casio-baby-g-bg-169cm-4.avif',
-    price: '$145',
-  },
-  {
     title: 'Dyson Airstrait straightener in Ceramic Pink/Rose Gold',
     url: 'https://www.dyson.com/hair-care/hair-straighteners/airstrait/ceramic-pink-rose-gold',
     image: 'dyson-airstrait-pink-rose-gold.png',
     price: '$499',
   },
   {
-    title: 'Aritzia Prose dress',
-    url: 'https://www.aritzia.com/us/en/product/prose-dress/135363.html?color=1274',
-    image: 'aritzia-prose-dress.avif',
-    price: '$168',
-  },
-  {
     title: 'MAM Originals Comet gold spiked bracelet',
     url: 'https://mamoriginals.com/products/spiked-bracelet-gold-comet-265',
     image: 'mam-comet-bracelet.jpg',
     price: '$341',
-  },
-  {
-    title: 'MAM Originals Pleiadians two-drop ear cuff, gold',
-    url: 'https://mamoriginals.com/products/two-drop-ear-cuff-gold-pleiadians-142',
-    image: 'mam-pleiadians-ear-cuff.jpg',
-    price: '$274',
   },
   {
     title: 'MAM Originals Butterfly gold dangle liquid earring',
@@ -220,46 +198,16 @@ export const presents: Present[] = [
     price: '$149.99',
   },
   {
-    title: 'Aritzia Unison dress',
-    url: 'https://www.aritzia.com/us/en/product/unison-dress/133960.html?color=1274',
-    image: 'aritzia-unison-dress.avif',
-    price: '$148',
+    title: "Oasis (What's the Story) Morning Glory? vinyl",
+    url: 'https://www.target.com/p/oasis-whats-the-story-morning-glory-vinyl/-/A-1004107038',
+    image: 'oasis-morning-glory-vinyl.jpg',
+    price: '$37.04',
   },
   {
-    title: 'Lightahead LED fake fish aquarium lamp',
-    url: 'https://www.amazon.com/dp/B010MVJZ8E',
-    image: 'fish-aquarium-lamp.jpg',
-    price: '$23.99',
-  },
-  {
-    title: 'Aritzia Liaison dress',
-    url: 'https://www.aritzia.com/us/en/product/liaison-dress/135243.html?color=1274',
-    image: 'aritzia-liaison-dress.avif',
-    price: '$148',
-  },
-  {
-    title: 'MAM Originals Amulet gold drop earrings with pearl',
-    url: 'https://mamoriginals.com/products/gold-long-earrings-pearl-amulet-951',
-    image: 'mam-amulet-earrings.jpg',
-    price: '$177',
-  },
-  {
-    title: 'Aritzia Technique linen mini dress',
-    url: 'https://www.aritzia.com/us/en/product/technique-linen-mini-dress/131190.html?color=10230',
-    image: 'aritzia-technique-linen-mini-dress.avif',
-    price: '$148',
-  },
-  {
-    title: 'Aritzia Priscilla dress',
-    url: 'https://www.aritzia.com/us/en/product/priscilla-dress/132434.html?color=1274',
-    image: 'aritzia-priscilla-dress.avif',
-    price: '$128',
-  },
-  {
-    title: 'Homedics 2-in-1 portable steam sauna + red light wands',
-    url: 'https://www.costco.com/p/-/homedics-2-in-1-portable-steam-sauna-red-light-wands/4201023343',
-    image: 'homedics-steam-sauna-red-light.webp',
-    price: '$299.99',
+    title: "Taylor Swift, Red (Taylor's Version) on vinyl",
+    url: 'https://www.amazon.com/dp/B09J99PKDF',
+    image: 'red-taylors-version-vinyl.jpg',
+    price: '$46.99',
   },
   {
     title: 'Lana Del Rey, NFR! on vinyl',
@@ -280,6 +228,36 @@ export const presents: Present[] = [
     price: '$24.98',
   },
   {
+    title: 'RainSisters Raven Red fit and flare coat, black with red lining',
+    url: 'https://rainsisters.com/products/fit-and-flare-coat-with-full-circle-skirt-in-black-and-red-raven-red',
+    image: 'rainsisters-raven-red-coat.jpg',
+    price: '$440',
+  },
+  {
+    title: 'Liene M100 4x6" photo printer with 100 sheets & 3 cartridges',
+    url: 'https://www.amazon.com/dp/B09XHYNHB2',
+    image: 'liene-m100-photo-printer.jpg',
+    price: '$159.99',
+  },
+  {
+    title: 'MAM Originals Amulet gold drop earrings with pearl',
+    url: 'https://mamoriginals.com/products/gold-long-earrings-pearl-amulet-951',
+    image: 'mam-amulet-earrings.jpg',
+    price: '$177',
+  },
+  {
+    title: 'Homedics 2-in-1 portable steam sauna + red light wands',
+    url: 'https://www.costco.com/p/-/homedics-2-in-1-portable-steam-sauna-red-light-wands/4201023343',
+    image: 'homedics-steam-sauna-red-light.webp',
+    price: '$299.99',
+  },
+  {
+    title: 'Lightahead LED fake fish aquarium lamp',
+    url: 'https://www.amazon.com/dp/B010MVJZ8E',
+    image: 'fish-aquarium-lamp.jpg',
+    price: '$23.99',
+  },
+  {
     title: 'Birkenstock Amsterdam in wrapped suede',
     url: 'https://www.birkenstock.com/us/amsterdam-wrapped-suede-leather/amsterdamwrapped-suede-suedeleather-S005650-eva-u_01729.html',
     image: 'birkenstock-amsterdam-suede.jpg',
@@ -298,34 +276,22 @@ export const presents: Present[] = [
     price: '$333',
   },
   {
-    title: 'Mirakel heated shiatsu neck massager',
-    url: 'https://www.amazon.com/dp/B07WJSY2G8',
-    image: 'mirakel-neck-massager.jpg',
-    price: '$29.99',
-  },
-  {
-    title: 'What Am I, A Deer? by Polly Barton',
-    url: 'https://fitzcarraldoeditions.com/books/what-am-i-a-deer/',
-    image: 'what-am-i-a-deer.webp',
-    price: '£14.99',
-  },
-  {
     title: 'The Count of Monte Cristo by Alexandre Dumas (Penguin Classics)',
     url: 'https://www.amazon.com/dp/0140449264?smid=ATVPDKIKX0DER&psc=1',
     image: 'count-of-monte-cristo.jpg',
     price: '$11',
   },
   {
-    title: 'JOOFO dimmable LED floor lamp with remote, black',
-    url: 'https://www.amazon.com/dp/B07WFC14VR?smid=A2OK2KVT5DUPLV&psc=1',
-    image: 'led-torchiere-floor-lamp.webp',
-    price: '$49.98',
+    title: 'Casio Privia PX-S1100 digital piano in light blue',
+    url: 'https://www.casio.com/us/electronic-musical-instruments/product.PX-S1100CB/',
+    image: 'casio-privia-px-s1100.avif',
+    price: '$729.99',
   },
   {
-    title: 'Alesis Recital Play 88-key piano keyboard bundle',
-    url: 'https://www.amazon.com/dp/B0CLVRL7YW',
-    image: 'alesis-recital-play-keyboard.jpg',
-    price: '$189',
+    title: 'Lola Blankets Original in Red Check',
+    url: 'https://lolablankets.com/products/rhubarb-check-original?variant=54706315133300',
+    image: 'lola-blanket-red-check.jpg',
+    price: '$275',
   },
   {
     title: 'BENECREAT clear numbered stitch markers, 30 pack',
@@ -334,16 +300,16 @@ export const presents: Present[] = [
     price: '$9.99',
   },
   {
-    title: 'Nogent Super Kim safety can opener, red',
-    url: 'https://www.amazon.com/dp/B001E05WQM?smid=A3FFT9NR69D1NI&psc=1',
-    image: 'nogent-super-kim-can-opener.jpg',
-    price: '$29',
+    title: 'SMISKI Hippers blind box figure',
+    url: 'https://smiski.com/e/products/hippers-series/',
+    image: 'smiski-hippers.png',
+    price: '$14',
   },
   {
-    title: 'Lola Blankets Original in Red Check',
-    url: 'https://lolablankets.com/products/rhubarb-check-original?variant=54706315133300',
-    image: 'lola-blanket-red-check.jpg',
-    price: '$275',
+    title: 'Casio Baby-G BG-169CM-4 watch',
+    url: 'https://www.casio.com/us/watches/babyg/product.BG-169CM-4/',
+    image: 'casio-baby-g-bg-169cm-4.avif',
+    price: '$145',
   },
   {
     title: 'Royal Craft Wood bamboo bathtub tray',

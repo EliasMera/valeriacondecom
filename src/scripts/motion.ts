@@ -335,7 +335,9 @@ function headerOnScroll() {
     end: 'max',
     onUpdate(self) {
       if (header.dataset.open === 'true') return;
-      gsap.to(header, { yPercent: self.direction === 1 ? -100 : 0, duration: 0.5, ease: 'power3.out', overwrite: true });
+      // Checks the real scroll too: on a page that barely scrolls (no footer) this can fire at the very top
+      const hide = self.direction === 1 && self.scroll() > 120;
+      gsap.to(header, { yPercent: hide ? -100 : 0, duration: 0.5, ease: 'power3.out', overwrite: true });
     },
     onLeaveBack: () => gsap.to(header, { yPercent: 0, duration: 0.5, ease: 'power3.out', overwrite: true }),
   });

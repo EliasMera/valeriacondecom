@@ -27,3 +27,9 @@
   from = "/es/get-inspired"
   to = "/es/memes"
   status = 301
+
+# /intercambio is Spanish only, so the language switch there lands back on it
+[[redirects]]
+  from = "/es/intercambio"
+  to = "/intercambio"
+  status = 302
