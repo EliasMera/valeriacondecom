@@ -11,16 +11,22 @@ import Recommendations from '../recommendations.astro';
 import Contact from '../contact.astro';
 import Presents from '../presents.astro';
 import Memes from '../memes.astro';
+import DateIdeas from '../date-ideas.astro';
+import Travel from '../travel.astro';
 import Lately from '../lately/index.astro';
 import Post from '../lately/[id].astro';
+import Guide from '../travel/[guide].astro';
 import { postPaths } from '@/lib/lately';
+import { guidePaths } from '@/lib/guides';
 
 export async function getStaticPaths() {
-  const pages = ['', 'about', 'lists', 'recommendations', 'contact', 'presents', 'memes', 'lately'];
+  const pages = ['', 'about', 'lists', 'recommendations', 'contact', 'presents', 'memes', 'date-ideas', 'travel', 'lately'];
   const posts = await postPaths();
+  const guides = await guidePaths();
   return [
     ...pages.map((page) => ({ params: { slug: page || undefined }, props: { page } })),
     ...posts.map(({ params, props }) => ({ params: { slug: `lately/${params.id}` }, props: { page: 'post', ...props } })),
+    ...guides.map(({ params, props }) => ({ params: { slug: `travel/${params.guide}` }, props: { page: 'guide', ...props } })),
   ];
 }
 
@@ -32,8 +38,11 @@ const components = {
   contact: Contact,
   presents: Presents,
   memes: Memes,
+  'date-ideas': DateIdeas,
+  travel: Travel,
   lately: Lately,
   post: Post,
+  guide: Guide,
 } as const;
 
 const { page, ...props } = Astro.props as { page: keyof typeof components } & Record<string, unknown>;

@@ -1,0 +1,112 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import Base from '@/layouts/Base.astro';
+import { guidePaths, formatGuideDate, type Guide } from '@/lib/guides';
+import { site } from '@/data/site';
+
+export const getStaticPaths = guidePaths;
+
+interface Props {
+  guide: Guide;
+}
+
+const { guide } = Astro.props;
+const { title, place, description, cover, coverAlt, published, updated, draft } = guide.data;
+const { Content, headings } = await render(guide);
+
+// The English page is the original; the /es copy points search engines back to it
+const path = `/travel/${guide.id}`;
+const url = new URL(path, site.url).href;
+const shareImage = cover ? new URL((await getImage({ src: cover, width: 1200, format: 'jpg' })).src, site.url).href : undefined;
+const contents = headings.filter((h) => h.depth === 2);
+
+// Structured data: tells search engines this is an article, who wrote it, and where it sits on the site
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: title,
+    description,
+    ...(shareImage && { image: shareImage }),
+    datePublished: published.toISOString(),
+    dateModified: (updated ?? published).toISOString(),
+    author: { '@type': 'Person', name: site.name, url: site.url },
+    mainEntityOfPage: url,
+    about: { '@type': 'Place', name: place },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: site.url },
+      { '@type': 'ListItem', position: 2, name: 'Travel', item: new URL('/travel', site.url).href },
+      { '@type': 'ListItem', position: 3, name: place, item: url },
+    ],
+  },
+];
+---
+
+<Base title={title} description={description} canonical={path} lang="en" image={shareImage} type="article" noindex={draft}>
+  <Fragment slot="head">
+    <meta property="article:published_time" content={published.toISOString()} />
+    {updated && <meta property="article:modified_time" content={updated.toISOString()} />}
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </Fragment>
+
+  <article class="container-prose pt-28 pb-32 sm:pt-36">
+    <nav aria-label="Breadcrumb" class="mb-10 text-sm text-muted" data-reveal="fade">
+      <ol class="flex items-center gap-2">
+        <li><a href="/travel" class="hover:text-rose">Travel</a></li>
+        <li aria-hidden="true">/</li>
+        <li aria-current="page" class="text-ink">{place}</li>
+      </ol>
+    </nav>
+
+    <header>
+      {draft && <p class="mono mb-4 text-rose">Draft · only visible in dev</p>}
+      <h1 class="display-lg" data-split="load">{title}<span class="glow-dot">.</span></h1>
+      <p class="lead mt-6" data-reveal data-delay="0.3">{description}</p>
+      <p class="mt-6 text-sm text-muted" data-reveal data-delay="0.4">
+        By {site.name} · {updated ? 'Updated' : 'Published'} <time datetime={(updated ?? published).toISOString()}>{formatGuideDate(updated ?? published)}</time>
+      </p>
+    </header>
+
+    {
+      cover && (
+        <Image src={cover} alt={coverAlt ?? ''} width={1400} widths={[700, 1000, 1400]} sizes="(min-width: 52rem) 52rem, 100vw" loading="eager" class="mt-12 w-full rounded-[var(--radius-tile)]" data-reveal />
+      )
+    }
+
+    {
+      contents.length > 1 && (
+        <nav aria-labelledby="toc-title" class="card mt-12 p-6 sm:p-8" data-reveal>
+          <p id="toc-title" class="eyebrow mb-4">In this guide</p>
+          <ol class="grid gap-2 sm:grid-cols-2">
+            {contents.map((h) => (
+              <li>
+                <a href={`#${h.slug}`} class="link-line">{h.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <div class="prose-post guide-body mt-12 text-lg">
+      <Content />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .guide-body :global(h2) {
+    scroll-margin-top: 6rem;
+    font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+    margin-top: 2.2em;
+  }
+  .guide-body :global(h3) {
+    scroll-margin-top: 6rem;
+    font-size: 1.35em;
+  }
+</style>

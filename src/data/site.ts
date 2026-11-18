@@ -18,6 +18,7 @@ export const nav: { label: string; es?: string; href: string }[] = [
   // Hidden for now: to bring Code back, rename src/pages/_projects.astro to projects.astro and uncomment.
   // { label: 'Code', href: '/projects' },
   { label: 'Lists', es: 'Listas', href: '/lists' },
+  { label: 'Travel', href: '/travel' },
   { label: 'Wish list', href: '/presents' },
   { label: 'Contact', es: 'Contacto', href: '/contact' },
 ];

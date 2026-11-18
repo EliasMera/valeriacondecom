@@ -2,20 +2,22 @@
 import { Image } from 'astro:assets';
 import Base from '@/layouts/Base.astro';
 import LatelyTeaser from '@/components/LatelyTeaser.astro';
+import InviteDialog from '@/components/InviteDialog.astro';
 import { getPresents } from '@/lib/presents';
 import { showPresentsOnHomepage, presentsHome, homepagePresents } from '@/data/presents';
 import { langOf, tr } from '@/i18n';
 import { homeLists, homeListsText } from '@/data/homeLists';
 import { lists } from '@/data/life';
 import { memesText } from '@/data/memes';
+import { dateIdeaGroups, dateIdeasText } from '@/data/dateIdeas';
 import { roles } from '@/data/site';
 import heroPhoto from '@/assets/hero.jpg';
 
 
 const sections = [
-  // Hidden for now (rename src/pages/_travel.astro, _photography.astro, _projects.astro to bring them back):
-  // { href: '/travel', label: 'Travel', description: 'Trips, stories, and photographs.' },
+  // Hidden for now (rename src/pages/_photography.astro, _projects.astro to bring them back):
   // { href: '/photography', label: 'Photography', description: 'Scenes I wanted to keep.' },
+  { href: '/travel', label: 'Travel', description: "Every country I've been to." },
   { href: '/recommendations', label: { en: 'Recommendations', es: 'Recomendaciones' }, description: { en: 'Stuff I loved and think you will too.', es: 'Cosas que me encantaron y creo que a ti también.' } },
   // { href: '/projects', label: 'Code', description: 'Making things exist.' },
   { href: '/about', label: { en: 'About', es: 'Sobre mí' }, description: { en: 'The longer version of who I am.', es: 'La versión larga de quién soy.' } },
@@ -31,6 +33,19 @@ const listFor = (id: string) => {
   if (!list) throw new Error(`homeLists: no list with id "${id}" in src/data/life.ts`);
   return list;
 };
+// Date ideas: every idea with its group, so the cards can be dealt again with new ones
+const dateIdeas = dateIdeaGroups.flatMap((g) => g.ideas.map((idea) => ({ idea: tr(idea, lang), group: tr(g.title, lang), id: g.id })));
+// The first hand: the first idea of each of the first five groups
+const dateHand = dateIdeaGroups.slice(0, 5).map((g) => ({ idea: tr(g.ideas[0], lang), group: tr(g.title, lang), id: g.id }));
+// How each card in the hand sits on wide screens: rotation, sideways shift and drop.
+// Phones only show the middle three, with the `rSm` rotation and `xSm` shift
+const handSpots = [
+  { r: -14, x: '-84%', y: '14%', rSm: 0, xSm: '0%' },
+  { r: -7, x: '-42%', y: '3%', rSm: -10, xSm: '-34%' },
+  { r: 0, x: '0%', y: '0%', rSm: 0, xSm: '0%' },
+  { r: 7, x: '42%', y: '3%', rSm: 10, xSm: '34%' },
+  { r: 14, x: '84%', y: '14%', rSm: 0, xSm: '0%' },
+];
 const allPresents = showPresentsOnHomepage ? await getPresents() : [];
 const presentPreviews = showPresentsOnHomepage
   ? homepagePresents.map((title) => {
@@ -137,6 +152,48 @@ const presentPreviews = showPresentsOnHomepage
     </div>
   </section>
 
+  <!-- ── Date ideas: a hand of cards that deals out when it scrolls into view ── -->
+  <section class="container-x overflow-hidden pb-24 sm:pb-32" aria-labelledby="dates-title">
+    <div class="mb-4 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h2 id="dates-title" class="display-lg" data-split>
+          {tr(dateIdeasText.title, lang)}<span class="glow-dot">.</span>
+        </h2>
+        <p class="lead mt-5 max-w-md" data-reveal>{tr(dateIdeasText.intro, lang)}</p>
+      </div>
+      <div class="flex flex-wrap gap-3" data-reveal>
+        <button type="button" class="deal-again btn btn-ghost" data-deal>{tr(dateIdeasText.deal, lang)}</button>
+        <a href="/date-ideas" class="btn btn-ghost" data-magnetic>
+          {tr(dateIdeasText.button, lang)} <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
+    <div class="hand" data-hand data-ideas={JSON.stringify(dateIdeas)}>
+      {
+        dateHand.map((card, i) => {
+          const spot = handSpots[i];
+          return (
+            <a
+              href={`/date-ideas#${card.id}`}
+              class:list={['hcard', (i === 0 || i === 4) && 'hcard-outer']}
+              style={`--r-lg:${spot.r}deg; --x-lg:${spot.x}; --y-lg:${spot.y}; --r-sm:${spot.rSm}deg; --x-sm:${spot.xSm}; --i:${i}`}
+              data-hcard
+              data-invite={card.idea}
+            >
+              <span class="hcard-title" data-hcard-idea>{card.idea}</span>
+              <span class="mono flex justify-between text-muted">
+                <span data-hcard-group>{card.group}</span>
+                <span class="arrow" aria-hidden="true">→</span>
+              </span>
+            </a>
+          );
+        })
+      }
+    </div>
+    <!-- Clicking a card opens the invite; without JS it goes to that group on /date-ideas -->
+    <InviteDialog />
+  </section>
+
   <!-- ── Lists ────────────────────────────────────────────── -->
   <section class="container-x pb-24 sm:pb-32" aria-labelledby="lists-title">
     <div class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -232,6 +289,50 @@ const presentPreviews = showPresentsOnHomepage
       { threshold: 0.4 },
     );
     io.observe(card);
+  });
+
+  // Date ideas: the cards deal out into a fan the first time they're on screen.
+  // "Deal again" drops them, swaps in new ideas, and deals them back out.
+  document.querySelectorAll<HTMLElement>('[data-hand]').forEach((hand) => {
+    type Idea = { idea: string; group: string; id: string };
+    const ideas: Idea[] = JSON.parse(hand.dataset.ideas ?? '[]');
+    const cards = [...hand.querySelectorAll<HTMLAnchorElement>('[data-hcard]')];
+    const button = hand.parentElement?.querySelector<HTMLButtonElement>('[data-deal]');
+    const deal = () => requestAnimationFrame(() => requestAnimationFrame(() => (hand.dataset.dealt = '')));
+    const newHand = () => {
+      const picked = [...ideas].sort(() => Math.random() - 0.5).slice(0, cards.length);
+      cards.forEach((card, i) => {
+        card.href = `/date-ideas#${picked[i].id}`;
+        card.dataset.invite = picked[i].idea;
+        card.querySelector('[data-hcard-idea]')!.textContent = picked[i].idea;
+        card.querySelector('[data-hcard-group]')!.textContent = picked[i].group;
+      });
+    };
+    let busy = false;
+    button?.addEventListener('click', async () => {
+      if (busy) return;
+      if (reduceMotion) return newHand();
+      busy = true;
+      delete hand.dataset.dealt;
+      await sleep(550);
+      newHand();
+      deal();
+      await sleep(1200);
+      busy = false;
+    });
+    if (reduceMotion) {
+      hand.dataset.dealt = '';
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        deal();
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(hand);
   });
 
   document.querySelectorAll<HTMLElement>('[data-typewriter]').forEach((sheet) => {
@@ -387,6 +488,86 @@ const presentPreviews = showPresentsOnHomepage
       translate: 0 -260%;
       opacity: 0;
     }
+  }
+  /* Date ideas: hand of cards. Without JS the cards are already fanned out;
+     with JS they start face down at the bottom until the script adds data-dealt */
+  .hand {
+    position: relative;
+    height: clamp(250px, 32vw, 400px);
+  }
+  .hcard {
+    --w: clamp(150px, 20vw, 220px);
+    --r: var(--r-sm);
+    --x: var(--x-sm);
+    --y: 0%;
+    position: absolute;
+    left: 50%;
+    bottom: -12%;
+    width: var(--w);
+    margin-left: calc(var(--w) / -2);
+    aspect-ratio: 5 / 7;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: clamp(14px, 2.2vw, 22px);
+    background: var(--color-card);
+    border: 1px solid rgb(29 24 32 / 0.12);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -22px rgb(29 24 32 / 0.5);
+    transform-origin: 50% 160%;
+    transform: translateX(var(--x)) rotate(var(--r)) translateY(var(--y));
+    transition:
+      transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.4s;
+  }
+  @media (min-width: 640px) {
+    .hcard {
+      --r: var(--r-lg);
+      --x: var(--x-lg);
+      --y: var(--y-lg);
+    }
+  }
+  @media (max-width: 639px) {
+    .hcard-outer {
+      display: none;
+    }
+  }
+  .hcard-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.1rem, 2.1vw, 1.65rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    /* centered in the space above the category line */
+    margin-block: auto;
+  }
+  .hcard:hover,
+  .hcard:focus-visible {
+    z-index: 5;
+    transform: translateX(var(--x)) rotate(var(--r)) translateY(-14%);
+    box-shadow:
+      0 0 0 1px rgb(224 85 138 / 0.3),
+      0 28px 60px -24px rgb(224 85 138 / 0.6);
+    transition-duration: 0.5s;
+  }
+  .hcard:hover .arrow {
+    translate: 4px 0;
+    color: var(--color-rose);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.js) .hand:not([data-dealt]) .hcard {
+      transform: translateX(0) rotate(0deg) translateY(30%);
+      transition-duration: 0.5s;
+      transition-delay: 0s;
+    }
+    :global(html.js) .hand[data-dealt] .hcard:not(:hover):not(:focus-visible) {
+      transition-delay: calc(0.1s + var(--i) * 0.08s);
+    }
+  }
+  /* "Deal again" needs JS */
+  :global(html:not(.js)) .deal-again {
+    display: none;
   }
   /* The present pictures fan out a little more on hover */
   .group:hover [data-present-card]:nth-child(1) {

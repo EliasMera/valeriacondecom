@@ -14,11 +14,17 @@ interface Props {
   lang?: Lang;
   /** Set to false to leave the site footer off */
   footer?: boolean;
+  /** The address search engines should treat as the original (defaults to this page) */
+  canonical?: string;
+  /** Picture shown when the page is shared (a full URL) */
+  image?: string;
+  /** 'article' for guides and other written pieces */
+  type?: 'website' | 'article';
 }
 
-const { title, description = site.description, noindex = false, lang: onlyLang, footer = true } = Astro.props;
+const { title, description = site.description, noindex = false, lang: onlyLang, footer = true, image, type = 'website' } = Astro.props;
 const pageTitle = title ? `${title} — ${site.name}` : site.name;
-const canonical = new URL(Astro.url.pathname, site.url).href;
+const canonical = new URL(Astro.props.canonical ?? Astro.url.pathname, site.url).href;
 const lang = onlyLang ?? langOf(Astro.url);
 const alternate = new URL(otherLangPath(Astro.url), site.url).href;
 ---
@@ -43,11 +49,15 @@ const alternate = new URL(otherLangPath(Astro.url), site.url).href;
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#faf6f1" />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:site_name" content={site.name} />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
+    {image && <meta property="og:image" content={image} />}
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    <!-- Extra tags a page adds, like structured data for search engines -->
+    <slot name="head" />
 
     <script is:inline>
       document.documentElement.classList.add('js');

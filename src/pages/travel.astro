@@ -1,0 +1,171 @@
+---
+import { Image } from 'astro:assets';
+import Base from '@/layouts/Base.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Swatch from '@/components/Swatch.astro';
+import { trips } from '@/data/life';
+import { countriesText } from '@/data/countries';
+import { getMap, MAP_WIDTH, MAP_HEIGHT } from '@/lib/countries';
+import { getGuides } from '@/lib/guides';
+import { langOf, tr } from '@/i18n';
+
+const lang = langOf(Astro.url);
+const { paths, dots, visited } = getMap();
+const guides = await getGuides();
+---
+
+<Base title={tr(countriesText.eyebrow, lang)}>
+  <PageHeader
+    eyebrow={tr(countriesText.eyebrow, lang)}
+    title={tr(countriesText.title, lang)}
+    accent={tr(countriesText.accent, lang)}
+    lead={tr(countriesText.lead, lang).replace('{n}', String(visited.length))}
+  />
+
+  <section class="container-x pb-32">
+    <div class="card p-3 sm:p-6" data-reveal>
+      <svg id="world-map" class="world-map" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} role="img" aria-label={visited.map((c) => c.name).join(', ')}>
+        {
+          paths.map((c, i) => (
+            <path d={c.d} data-country={c.id} data-visited={c.visited || undefined} style={c.visited ? `--i:${i % 12}` : undefined}>
+              <title>{c.name}</title>
+            </path>
+          ))
+        }
+        {
+          dots.map((dot) => (
+            <circle cx={dot.x} cy={dot.y} r="3.5" data-country={dot.id} data-visited>
+              <title>{dot.name}</title>
+            </circle>
+          ))
+        }
+      </svg>
+    </div>
+
+    <ul class="mt-10 flex flex-wrap gap-2" data-reveal-stagger="0.04">
+      {
+        visited.map((c) => (
+          <li>
+            <span class="country-chip" data-chip={c.id}>
+              {c.name}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {
+    guides.length > 0 && (
+      <section class="container-x pb-32" aria-labelledby="guides-title">
+        <h2 id="guides-title" class="display-lg mb-10" data-split>
+          {tr(countriesText.guides, lang)}<span class="glow-dot">.</span>
+        </h2>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-reveal-stagger="0.08">
+          {guides.map((guide) => (
+            <a href={`/travel/${guide.id}`} class="tile group">
+              {guide.data.cover ? (
+                <Image src={guide.data.cover} alt="" width={700} widths={[400, 700]} sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw" class="aspect-[4/3] w-full object-cover" />
+              ) : (
+                <span class="grid aspect-[4/3] place-items-center bg-rose-soft font-display text-5xl text-rose" aria-hidden="true">{guide.data.place}</span>
+              )}
+              <div class="p-6">
+                <h3 class="display-sm group-hover:text-rose">{guide.data.title}</h3>
+                <p class="mt-3 line-clamp-3 text-muted">{guide.data.description}</p>
+                {guide.data.draft && <p class="mono mt-4 text-xs text-rose">Draft</p>}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    trips.map((trip, i) => (
+      <article class="border-t border-line">
+        <div class="container-x py-20 sm:py-28">
+          <div class="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-20">
+            <div>
+              <p class="mono mb-4 text-rose">
+                0{i + 1} · {trip.dates}
+              </p>
+              <h2 class="display-lg" data-split>{trip.destination}</h2>
+              <p class="mt-8 text-lg" data-reveal>{trip.description}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 self-start" data-reveal-stagger="0.08">
+              {trip.photos.map((photo, pi) => (
+                <Swatch {...photo} class:list={['aspect-square', pi % 2 === 1 && 'translate-y-8']} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </article>
+    ))
+  }
+</Base>
+
+<style>
+  .world-map {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .world-map path {
+    fill: var(--color-paper-2);
+    stroke: var(--color-card);
+    stroke-width: 0.6;
+    transition: fill 0.3s var(--ease-out-expo);
+  }
+  .world-map [data-visited] {
+    fill: var(--color-rose-glow);
+  }
+  .world-map circle {
+    stroke: var(--color-card);
+    stroke-width: 1;
+  }
+  .world-map path:hover,
+  .world-map [data-active] {
+    fill: var(--color-ink-2);
+  }
+  .country-chip {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    background: var(--color-card);
+    font-size: 0.92rem;
+    transition:
+      border-color 0.3s,
+      color 0.3s;
+  }
+  .country-chip:hover {
+    border-color: var(--color-rose);
+    color: var(--color-rose);
+  }
+
+  /* Countries fill in one after another as the page loads */
+  @media (prefers-reduced-motion: no-preference) {
+    .world-map [data-visited] {
+      animation: country-in 1.2s var(--ease-out-expo) both;
+      animation-delay: calc(0.6s + var(--i, 0) * 0.08s);
+    }
+  }
+  @keyframes country-in {
+    from {
+      fill: var(--color-paper-2);
+    }
+  }
+</style>
+
+<script>
+  const map = document.getElementById('world-map');
+  if (map) {
+    // Hovering a country's name lights it up on the map
+    document.querySelectorAll<HTMLElement>('[data-chip]').forEach((chip) => {
+      const shapes = map.querySelectorAll(`[data-country="${chip.dataset.chip}"]`);
+      chip.addEventListener('mouseenter', () => shapes.forEach((s) => s.setAttribute('data-active', '')));
+      chip.addEventListener('mouseleave', () => shapes.forEach((s) => s.removeAttribute('data-active')));
+    });
+  }
+</script>

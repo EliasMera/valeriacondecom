@@ -17,6 +17,60 @@ export const secretSantaText = {
   shh: 'Shh. Es secreto.',
   hide: 'Volver a envolver',
   noscript: 'Esta página necesita JavaScript para abrir tu regalo.',
-  /** The card at the bottom, shown to everyone once their present is open. `pink` is the part of `question` in pink. */
+  /** The card at the bottom, always visible. `pink` is the part of `question` in pink. */
   wishList: { label: 'Psst!', question: 'Te tocó Valeria?', pink: 'Valeria', link: 'Checa su wish list', href: '/es/presents' },
 };
+
+/**
+ * Everyone else's wish lists, shown as a table under Valeria's card. One row per person,
+ * in this order. For each gift, put its photo in src/assets/intercambio/ and set `image` to the filename
+ * (without one, the square shows the store's name). `note` is optional, shown under the square.
+ * A gift with no `url` is shown as plain text, no square.
+ *
+ *   { name: 'Ana', gifts: [{ title: 'Taza', url: 'https://…', image: 'ana-taza.jpg' }] },
+ */
+export const wishLists: { name: string; gifts: { title: string; url?: string; image?: string; note?: string }[] }[] = [
+  { name: 'Elias', gifts: [{ title: 'unas clases de tennis' }] },
+  {
+    name: 'Marisol',
+    gifts: [
+      {
+        title: 'Tenis para tennis Yonex de mujer',
+        url: 'https://www.liverpool.com.mx/tienda/pdp/Tenis-para-tennis-Yonex-de-mujer/1185452114',
+        image: 'marisol-yonex-tenis.jpg',
+        note: 'tenis',
+      },
+    ],
+  },
+  {
+    name: 'Diego',
+    gifts: [
+      {
+        title: 'Umber Dormeuil Flow Pant',
+        url: 'https://www.glorydaysclo.com/products/the-umber-dormeuil-flow-pant?variant=57702465274238',
+        image: 'diego-umber-flow-pant.jpg',
+        note: 'color cafe talla M',
+      },
+      {
+        title: 'Mochila Cruiser 26L',
+        url: 'https://www.lululemon.mx/es-mx/p/mochila-cruiser-26l-actualizada/prod20005787.html?dwvar_prod20005787_color=043646',
+        note: 'mochila',
+      },
+    ],
+  },
+  {
+    name: 'Oscar',
+    gifts: [
+      {
+        title: 'MYLEUS envases portátiles apilables para proteína',
+        url: 'https://www.amazon.com.mx/dp/B0FSRJVY22?psc=1',
+        image: 'oscar-envase-creatina.jpg',
+        note: 'ESTE envase para creatina',
+      },
+    ],
+  },
+  { name: 'Antonella', gifts: [{ title: 'una inscripcion a un internado militar' }] },
+  { name: 'Alessia', gifts: [{ title: 'un libro sobre adolescencia' }] },
+  { name: 'Bertha', gifts: [{ title: 'marihuana' }] },
+  { name: 'Luis', gifts: [{ title: 'unas sesiones de terapia' }] },
+];

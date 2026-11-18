@@ -40,4 +40,37 @@ const lately = defineCollection({
     }),
 });
 
-export const collections = { lately };
+/**
+ * Travel guides. Each guide is a folder:
+ *   src/content/guides/<place>/index.md   ← the guide
+ *   src/content/guides/<place>/*.jpg      ← its photos
+ * The folder name becomes the guide's URL: /travel/<place>.
+ * See src/content/guides/README.md for how to write one.
+ */
+const guides = defineCollection({
+  loader: glob({
+    pattern: '*/index.md',
+    base: './src/content/guides',
+    generateId: ({ entry }) => entry.replace(/\/index\.md$/, ''),
+  }),
+  schema: ({ image }) =>
+    z.object({
+      /** The page title, shown big and in search results, e.g. "Malta travel guide" */
+      title: z.string(),
+      /** The place, as it should appear on the guide's card on /travel */
+      place: z.string(),
+      /** The snippet search engines show under the title. Aim for 120–160 characters */
+      description: z.string().max(170, 'Keep the description under 160 characters or search engines cut it off'),
+      /** Optional cover photo in the guide's folder; also the picture when the guide is shared */
+      cover: image().optional(),
+      /** Describes the cover for people who can't see it (and for search engines) */
+      coverAlt: z.string().optional(),
+      /** When the guide was first published, and last changed */
+      published: z.coerce.date(),
+      updated: z.coerce.date().optional(),
+      /** true = only visible while running `npm run dev`, never on the live site */
+      draft: z.boolean().default(false),
+    }),
+});
+
+export const collections = { lately, guides };

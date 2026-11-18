@@ -4,8 +4,13 @@
  * who they gift to. The draw itself is made by scripts/secret-santa.mjs (see src/data/secretSanta.ts).
  */
 import Base from '@/layouts/Base.astro';
-import { secretSantaText as t } from '@/data/secretSanta';
+import { Image } from 'astro:assets';
+import { secretSantaText as t, wishLists } from '@/data/secretSanta';
 import draw from '@/data/secretSanta.json';
+
+const giftImages = import.meta.glob<{ default: ImageMetadata }>('/src/assets/intercambio/*.{jpg,jpeg,png,webp,avif}', {
+  eager: true,
+});
 
 // The title's first word sits on its own line
 const [firstWord, ...rest] = t.title.split(' ');
@@ -81,8 +86,8 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
       </div>
     </div>
 
-    <!-- For everyone, whoever they got; shows up once the present is open -->
-    <div class="container-x pb-6" data-wish hidden>
+    <!-- Everyone's wish lists, always visible (no code needed) -->
+    <div class="container-x pb-6">
       <a href={t.wishList.href} class="tile group !block px-6 py-16 text-left sm:px-12 sm:py-20">
         <p class="eyebrow flex w-fit">{t.wishList.label}</p>
         <p class="display-lg mt-6">{questionStart}<span class="text-rose">{t.wishList.pink}</span>{questionEnd}</p>
@@ -90,6 +95,34 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
           {t.wishList.link}&nbsp;<span class="arrow" aria-hidden="true">→</span>
         </span>
       </a>
+
+      <table class="wish-table mt-6 w-full text-left">
+        <tbody>
+          {wishLists.map((person) => (
+            <tr>
+              <th scope="row" class="display-sm w-px pr-8 align-middle whitespace-nowrap">{person.name}</th>
+              <td>
+                <div class="flex flex-wrap items-start gap-4">
+                  {person.gifts.map((gift) => !gift.url ? (
+                    <span class="self-center text-sm">{gift.title}</span>
+                  ) : (
+                    <a href={gift.url} target="_blank" rel="noopener" title={gift.title} class="gift-link w-[4.5rem] text-xs text-muted">
+                      <span class="gift-thumb">
+                        {gift.image ? (
+                          <Image src={giftImages[`/src/assets/intercambio/${gift.image}`].default} alt={gift.title} width={160} height={160} />
+                        ) : (
+                          new URL(gift.url).hostname.replace(/^www\./, '').split('.')[0]
+                        )}
+                      </span>
+                      {gift.note && <span class="mt-1 block leading-tight">{gift.note}</span>}
+                    </a>
+                  ))}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
 
     <!-- The big "Hola …!" that plays first, then shrinks into the greeting -->
@@ -307,6 +340,34 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
     min-height: auto;
   }
 
+  /* Everyone else's wish lists */
+  .wish-table tr + tr {
+    border-top: 1px solid rgb(29 24 32 / 0.1);
+  }
+  .wish-table th,
+  .wish-table td {
+    height: 6.5rem; /* rows keep their size even with no gifts yet */
+    padding-block: 1rem;
+  }
+  .gift-thumb {
+    display: grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--color-card);
+    transition: transform 0.3s var(--ease-out-expo);
+  }
+  .gift-link:hover .gift-thumb {
+    transform: translateY(-3px);
+  }
+  .gift-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .confetti {
     position: fixed;
     inset: 0;
@@ -347,7 +408,6 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
   const canvas = document.querySelector<HTMLCanvasElement>('[data-confetti]')!;
   const hello = document.querySelector<HTMLElement>('[data-hello]')!;
   const eyebrow = result[0].querySelector<HTMLElement>('.eyebrow')!;
-  const wish = document.querySelector<HTMLElement>('[data-wish]')!;
   const section = document.querySelector<HTMLElement>('.santa')!;
 
   // --- Unlocking: the PIN is the key to exactly one of the locked results ---
@@ -456,7 +516,6 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
     if (reduceMotion) {
       locked.forEach((el) => (el.hidden = true));
       result.forEach((el) => (el.hidden = false));
-      wish.hidden = false;
       section.classList.add('is-open');
       gsap.set(lid, { y: 92, x: -75, rotation: -84 });
       gsap.set(glow, { opacity: 1, scale: 1 });
@@ -486,22 +545,17 @@ const flakes = Array.from({ length: 36 }, (_, i) => ({
       .fromTo(eyebrow, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' })
       .fromTo(giftee.children, pop, { opacity: 1, y: 0, scale: 1, rotation: 0, duration: 0.8, ease: 'back.out(2.2)', stagger: 0.06 }, '<0.3')
       .fromTo(result[1], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out' }, '>-0.2')
-      .add(() => {
-        wish.hidden = false;
-        section.classList.add('is-open');
-      })
-      .fromTo(wish, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' });
+      .add(() => section.classList.add('is-open'));
   }
 
   document.querySelector('[data-hide]')!.addEventListener('click', () => {
     tl?.kill();
     gsap.killTweensOf(glow);
     hello.hidden = true;
-    wish.hidden = true;
     section.classList.remove('is-open');
     result.forEach((el) => (el.hidden = true));
     locked.forEach((el) => (el.hidden = false));
-    gsap.set([lid, glow, hello, greeting, eyebrow, wish, ...locked, ...result], { clearProps: 'all' });
+    gsap.set([lid, glow, hello, greeting, eyebrow, ...locked, ...result], { clearProps: 'all' });
     greeting.textContent = '';
     hello.replaceChildren();
     giftee.replaceChildren();

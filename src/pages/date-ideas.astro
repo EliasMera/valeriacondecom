@@ -1,0 +1,125 @@
+---
+import Base from '@/layouts/Base.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import InviteDialog from '@/components/InviteDialog.astro';
+import { dateIdeaGroups, dateIdeasText } from '@/data/dateIdeas';
+import { langOf, tr } from '@/i18n';
+
+const lang = langOf(Astro.url);
+
+// One numbered list across all the groups: each group starts where the last one ended
+const starts = dateIdeaGroups.map((_, gi) => dateIdeaGroups.slice(0, gi).reduce((n, g) => n + g.ideas.length, 0) + 1);
+---
+
+<Base title={tr(dateIdeasText.title, lang)}>
+  <PageHeader title={tr(dateIdeasText.title, lang)} accent={tr(dateIdeasText.accent, lang)} lead={tr(dateIdeasText.lead, lang)} />
+
+  <section class="container-prose pb-32">
+    <!-- Only works with JS, so it stays hidden without it -->
+    <div class="pick mb-8 flex flex-wrap items-center gap-x-6 gap-y-4" data-reveal>
+      <button type="button" class="btn btn-primary" data-pick>{tr(dateIdeasText.pick, lang)}</button>
+    </div>
+
+    {
+      dateIdeaGroups.map((group, gi) => (
+        <section id={group.id} class="scroll-mt-24" aria-labelledby={`${group.id}-title`}>
+          <h2 id={`${group.id}-title`} class="eyebrow mt-16 mb-2" data-reveal="fade">
+            {tr(group.title, lang)}
+          </h2>
+          <ol start={starts[gi]}>
+            {group.ideas.map((idea, i) => (
+              <li class="idea" data-idea data-reveal>
+                <span class="idea-num" aria-hidden="true">
+                  {starts[gi] + i}
+                </span>
+                <button type="button" class="idea-btn" data-invite={tr(idea, lang)}>
+                  {tr(idea, lang)}
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))
+    }
+  </section>
+
+  <InviteDialog />
+</Base>
+
+<style>
+  :global(html:not(.js)) .pick {
+    display: none;
+  }
+  .idea {
+    display: flex;
+    align-items: baseline;
+    gap: clamp(1rem, 3vw, 2rem);
+    padding-block: clamp(0.9rem, 2vw, 1.3rem);
+    border-bottom: 1px solid var(--color-line);
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(1.5rem, 3.6vw, 2.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    scroll-margin-block: 30vh;
+    transition:
+      color 0.4s,
+      padding 0.5s var(--ease-out-expo);
+  }
+  .idea-num {
+    flex-shrink: 0;
+    width: 2.2em;
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--color-rose);
+  }
+  /* Each idea opens the invite window (src/components/InviteDialog.astro) */
+  .idea {
+    position: relative;
+  }
+  .idea-btn {
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.3s;
+  }
+  /* stretches the button over the whole row, so clicking anywhere on it opens the invite */
+  .idea-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+  .idea-btn:hover,
+  .idea-btn:focus-visible {
+    color: var(--color-rose);
+  }
+  /* Without JS the window can't open, so the ideas are plain text */
+  :global(html:not(.js)) .idea-btn {
+    cursor: auto;
+    pointer-events: none;
+  }
+  .idea[data-picked] {
+    color: var(--color-rose);
+    padding-left: 1rem;
+    font-style: italic;
+  }
+</style>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-pick]');
+  const ideas = [...document.querySelectorAll<HTMLElement>('[data-idea]')];
+  let last: HTMLElement | undefined;
+
+  // Lights up a random idea and scrolls to it
+  button?.addEventListener('click', () => {
+    let idea: HTMLElement;
+    do idea = ideas[Math.floor(Math.random() * ideas.length)];
+    while (idea === last && ideas.length > 1);
+    last?.removeAttribute('data-picked');
+    idea.setAttribute('data-picked', '');
+    last = idea;
+    const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    idea.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });
+  });
+</script>
