@@ -30,7 +30,29 @@ export const secretSantaText = {
  *   { name: 'Ana', gifts: [{ title: 'Taza', url: 'https://…', image: 'ana-taza.jpg' }] },
  */
 export const wishLists: { name: string; gifts: { title: string; url?: string; image?: string; note?: string }[] }[] = [
-  { name: 'Elias', gifts: [{ title: 'unas clases de tennis' }] },
+  {
+    name: 'Elias',
+    gifts: [
+      {
+        title: 'Bleu de Chanel Eau de Parfum, 100 ml',
+        url: 'https://www.elpalaciodehierro.com/chanel-eau-de-parfum-vaporizador-100-ml-31531703.html',
+        image: 'elias-bleu-de-chanel.jpg',
+        note: 'Perfume',
+      },
+      {
+        title: 'Suéter polo Rag & Bone',
+        url: 'https://www.elpalaciodehierro.com/rag-bone-sueter-polo-hombre-45392724.html',
+        image: 'elias-rag-bone-polo.jpg',
+        note: 'Talla L',
+      },
+      {
+        title: 'Polo Porsche x BOSS de algodón con estampado jacquard',
+        url: 'https://www.elpalaciodehierro.com/boss-polo-porsche-x-boss-de-algodon-con-estampado-jacquard-hombre-45116298.html',
+        image: 'elias-porsche-boss-polo.jpg',
+        note: 'Talla L',
+      },
+    ],
+  },
   {
     name: 'Marisol',
     gifts: [
